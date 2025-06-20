@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="CoVISION">
+  <meta name="keywords" content="Co-visibility, Spatial Reasoning, Multiview, Place recoginition">     
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Co-VisiON</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script> -->
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> -->
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script src="./static/js/copy2clipboard.js"></script>
+  <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+  
+  <script src="https://cdn.knightlab.com/libs/juxtapose/latest/js/juxtapose.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.knightlab.com/libs/juxtapose/latest/css/juxtapose.css">
+</head>
+
+
+<body>
+
+<!-- Navigation bar. -->
+<nav class="navbar is-light" role="navigation" aria-label="main navigation">
+  <div class="container is-max-desktop">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://ai4ce.github.io/" target="_blank" rel="noopener noreferrer">
+        <img src="./static/images/ai4ce_new_linear_notext.svg" alt="AI4CE Lab" style="height: 2.0rem;">
+      </a>
+      <a role="button" onclick="this.classList.toggle('is-active');document.querySelector('#'+this.dataset.target).classList.toggle('is-active');" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="https://www.nyu.edu/" target="_blank">
+          <img src="./static/images/NYU_Long_RGB_Color.png" alt="NYU Logo" style="height: 2.0rem;">
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Title and authors. -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">
+            Co-VisiON
+          </h1>
+          <!-- <div class="column is-full_width">
+            <h2 class="title is-4">NeurIPS 2024</h2>
+          </div> -->
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://joechencc.github.io/">Chao Chen</a>,
+            </span>
+            <span class="author-block">
+              <a href="https://nobeldang.github.io/">Nobel Dang</a>,
+            </span>
+            <span class="author-block">
+              <a href="https://juexzz.github.io/">Juexiao Zhang</a>,
+            </span>
+            <span class="author-block">
+              <a href="">Wenkai Sun</a>,
+            </span>
+            <span class="author-block">
+              <a href="">Pengfei Zheng</a>,
+            </span>
+            <span class="author-block">
+              <a href="">Xuhang He</a>,
+            </span>
+            <span class="author-block">
+              <a href="">Yimeng Ye</a>,
+            </span>
+            <span class="author-block">
+              <a href="">Taarun Srinivas</a>,
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=YeG8ZM0AAAAJ">Chen Feng</a>,
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"> New York University
+          </div>
+
+
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                 <!-- add here later. -->
+                <a href="https://arxiv.org/abs/2410.11187"                
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+              <!-- <span class="link-block"> -->
+                <!-- add here later. -->
+               <!-- <a href=""                    
+                  class="external-link button is-normal is-rounded is-dark">
+                 <span class="icon">
+                     <i class="fas fa-camera"></i>
+                 </span>
+                 <span>Appendix</span>
+               </a> -->
+             <!-- </span> -->
+              <!-- Video Link. -->
+              <span class="link-block">
+                <a href="https://"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video <i>(coming soon)</i></span>
+                </a>
+              </span>
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="https://github.com/ai4ce/CoVISION"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+              <!-- Dataset Link. -->
+              <span class="link-block">
+                <a href="https://huggingface.co/datasets/ai4ce/CoVISION"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>Data</span>
+                </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Teaser. -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full-width teaser no-margin">
+        
+        <h2 class="title is-3">TLDR</h2>
+        <p style="font-size: 20px; background-color: #8b00e13b;">
+            We propose <b>Co-Visibility ReasONing</b>: a novel vision task to assess an intelligent agent’s spatial reasoning ability given sparse observations, and generate a sparse indoor image dataset with dense co-visibility annotations from photorealistic indoor simulation environments.
+        </p>
+        <br>
+
+        <center>
+          <div id="overview">
+            <img src="./static/images/teaser.png" style="width: 45vw; min-width: 330px;" alt="Teaser Image"> 
+          </div>
+          <p>
+            <b>Co-VisiON: Co-Visibility ReasONing on Sparse Image Sets of Indoor Scenes.</b> TBD: Details about the covisibility task.
+          </p>
+        </center>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+<!-- Abstract -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <br>
+        <h2 class="title is-3 has-text-centered">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Humans exhibit a remarkable ability to recognize co-visibility—the overlapping regions visible in multiple images—even when these images are sparsely distributed across a complex scene. 
+            This capability is foundational in 3D vision and robotic perception. Despite significant progress in vision learning, it remains unclear whether current vision models have reached human-level proficiency in co-visibility analysis. In this work, we introduce the Co-Visibility ReasONing (Co-VisiON) benchmark, designed to
+            directly evaluate co-visibility reasoning on sparse image sets across over 1000 indoor scenarios. Our experiments reveal that while co-visibility is typically treated as a low-level feature matching task, it poses a significant challenge for existing vision models under sparse conditions. 
+            Notably, a proprietary vision-language model outperforms all purely vision-based approaches, with all models lagging substantially behind human performance. This gap underscores the need for more than basic pairwise vision processing—it calls for a comprehensive spatial understanding through high-level reasoning across multiple views.
+            Inspired by human visual cognition, we propose a novel multi-view baseline, Covis, which achieves top performance among pure vision models and narrows the gap to the proprietary VLM. 
+            We hope our benchmark and findings will spur further advancements in developing vision models capable of robust, high-level reasoning in challenging, sparse environments.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- <hr> -->
+
+<!-- A section for video -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <!-- <h2 class="title is-3 has-text-centered">Illustration</h2> -->
+        <center>
+          <video muted autoplay loop width="700px" height="400px" controls controls id="videoPlayer">
+            <source src="./static/videos/scene1.mp4" type="video/mp4">
+          </video>
+        </center>
+      </div>
+    </div>
+  </div>
+
+<hr>
+<!-- Method Overview -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered ">
+      <div class="column is-full-width">
+        <h2 class="title is-3 has-text-centered">Method</h2>
+        <center>
+          <div id="overview">
+            <img src="./static/images/main.jpg" style="width: 55vw; min-width: 330px;" alt="Method Image"> 
+          </div>
+
+
+          <div class="content has-text-justified">
+            <p id="method-text-content"> 
+              <b>Method Overview: TBD
+            </p>
+
+          </div>
+        </center>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr>
+
+
+<!-- BibTeX -->
+<!-- 
+<section class="section" id="BibTeX"> 
+  <div class="container is-max-desktop content">
+    <center>
+    <h2 id="bibtexTitle" class="title">BibTeX</h2>
+    <button id="copyButton" onclick="copyToClipboard()">
+      <i class="fas fa-copy"></i>
+    </button>
+    <br>
+    <pre style="display: inline-flex; text-align: left";><code id="bibtexInfo">
+      @inproceedings{
+        zhang2024multiview,
+        title={Multiview Scene Graph},
+        author={Juexiao Zhang and Gao Zhu and Sihang Li and Xinhao Liu and Haorui Song and Xinran Tang and Chen Feng},
+        booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
+        year={2024},
+        url={https://openreview.net/forum?id=1ELFGSNBGC}
+        }
+      </code>
+    </pre>
+  </center>
+  </div> 
+ </section> 
+-->
+
+<!-- Acknowledgements   -->
+<section class="section" id="Acknowledgements">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Acknowledgements</h2>
+    We thank Kevin Lee, Kingston Yip, and Mandy Mao for their early investigation on the dataset and baselines, and Leon Zhang and Ammaar Firozi for their contributions to the dataset. The work was supported in part through NSF grants 2238968, 2322242, 2121391, and 2036870, and the NYU IT High Performance Computing resources, services, and staff expertise.
+  </div>
+</section>
+          
+<!-- Footer -->       
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+            This webpage template is from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>. 
+            This template is adapted by <a href="https://irvingf7.github.io/">Irving Fang</a> for <a href="https://ai4ce.github.io/">AI4CE Lab</a>.
+            We sincerely thank <a href="https://keunhong.com/">Keunhong Park</a> for developing and open-sourcing this template.
+            This website is inspired by the project page of <a href="https://ai4ce.github.io/FusionSense/">FusionSense</a>.
+          </p>
+        </div>
+      </div>
+          </p>
+        </div>
+      </div>
+  </div>
+</footer>
+
+</body>
+
+</html>
