@@ -6,7 +6,7 @@ This is the official implementation of
 >
 > New York University
 
-### [**[Project page]**](https://ai4ce.github.io/CoVISION) **|** [**[Paper]**](TBD)
+### [**[Project page]**](https://ai4ce.github.io/CoVISION) **|** [**[Paper]**](https://arxiv.org/abs/2506.16805)
 
 
 ![teaser](./assets/teasing-figure-vertical.png)
@@ -48,7 +48,7 @@ This should download both the HM3D and Gibson datasets. Untar all the dataset fi
 For dataset generation and its code, please refer to our data_generation branch.
 
 ### Inference
-TBD
+Will be releasing soon.
 
 ### Training our Covis method
 For mvdust3r implementation, please refer to our Covis branch.
