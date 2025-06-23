@@ -261,8 +261,8 @@
 
           <div class="content has-text-justified">
             <p id="method-text-content"> 
-              <b>Covis</b> is a multi-view encoder-decoder architecture designed for co-visibility reasoning among multiple images. For the multi-view setting we build our work on top of MV-DUSt3R. 
-                To enhance learning, we introduces a learnable mask that filters out non-covisible features, allowing the model to focus on relevant image regions. The approach jointly optimizes topology prediction (Co-VisiON) and mask prediction using BCE loss for both global and localized co-visibility signals.
+              <b>Covis</b> is a multi-view encoder-decoder architecture designed for co-visibility reasoning among multiple images, built on the <a href="https://mv-dust3rp.github.io/">MV-DUSt3R</a> backbone that follows the same attention pattern across views. Visual tokens for the reference, positive, and negative views are represented in blue, green, and orange, respectively, with gray and bold arrows indicating cross-view attention in the decoder. 
+              The reference (anchor) uses a separate prediction head, while the positive and negative views share the classification (CLS) and mask heads. Decoder outputs are projected to pixel-wise features, which are then filtered by a learnable mask M, allowing the model to focus on co-visible regions. Covis jointly optimizes topology prediction (Co-VisiON) and mask prediction using binary cross-entropy (BCE) loss, capturing both global and localized co-visibility signals.
             </p>
 
           </div>
