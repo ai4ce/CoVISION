@@ -2,7 +2,7 @@
 This is the official implementation of 
 >[CoVISION](https://ai4ce.github.io/CoVISION/) 
 >
->Chao Chen, Nobel Dang, Juexiao Zhang, Wenkai Sun, Pengfei Zheng, Xuhang He, Yimeng Ye, Taarun Srinivas and Chen Feng
+>Chao Chen, Nobel Dang, Juexiao Zhang, Wenkai Sun, Pengfei Zheng, Xuhang He, Yimeng Ye, Jiasheng Zhang, Taarun Srinivas and Chen Feng
 >
 > New York University
 
