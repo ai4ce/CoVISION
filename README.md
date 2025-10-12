@@ -51,7 +51,7 @@ cd ../../../
 
 ## Checkpoints
 
-Please download checkpoints [here](https://huggingface.co/Zhenggang/MV-DUSt3R/tree/main/checkpoints) to the folder [checkpoints](https://github.com/facebookresearch/mvdust3r/tree/main/checkpoints) before trying demo and evaluation.
+Please download checkpoints [here](https://drive.google.com/file/d/10ENwsiGsHQj6hXFEmOogGzmZ093yaF7D/view?usp=sharing) to the folder [checkpoints](https://github.com/facebookresearch/mvdust3r/tree/main/checkpoints) before trying demo and evaluation.
 
 |     Name    | Description |
 |-------------|-------------|
