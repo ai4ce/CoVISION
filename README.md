@@ -55,10 +55,8 @@ Please download checkpoints [here](https://drive.google.com/file/d/10ENwsiGsHQj6
 
 |     Name    | Description |
 |-------------|-------------|
-| MVD.pth | MV-DUSt3R |
-| MVDp_s1.pth | MV-DUSt3R+ trained on stage 1 (8 views) |
-| MVDp_s2.pth | MV-DUSt3R+ trained on stage 1 then stage 2 (mixed 4~12 views) |
-|DUSt3R_ViTLarge_BaseDecoder_224_linear.pth | the pretrained [DUSt3R model](https://github.com/naver/dust3r?tab=readme-ov-file#checkpoints). Our training is finetuned upon it |
+| checkpoint-last.pth | Covis checkpoint |
+
 
 ## Gradio Demo
 
