@@ -112,6 +112,66 @@ class MVDataset(BaseStereoViewDataset):
         
         return resized_image_pil, resized_depth
 
+    def _downsample_to_target(self, image, target_resolution=(224, 224)):
+        # 0.3 - 0.4s
+        image_pil = PIL.Image.fromarray(image)
+        W, H = image_pil.size
+
+        # Target resolution
+        target_W, target_H = target_resolution
+
+        # Calculate scale factors for width and height
+        scale_x = target_W / W
+        scale_y = target_H / H
+
+
+        resized_image_pil = image_pil.resize(target_resolution, PIL.Image.LANCZOS)
+        # ~0.3s        
+        return resized_image_pil
+
+    def extract_regions_from_stitched_image(self,image_path):
+        # Load the stitched image
+        image = cv2.imread(image_path)
+
+        # Check if the image was loaded successfully
+        if image is None:
+            print(f"Error: Unable to load image at {image_path}")
+            return None, None
+
+        # Coordinates of the left and right regions in the image (adjust according to your needs)
+        # Left image region coordinates
+        left_x_start, left_y_start = 81, 180
+        left_x_end, left_y_end = 304, 304
+
+        # Right image region coordinates
+        right_x_start, right_y_start = 352, 180
+        right_x_end, right_y_end = 574, 304
+
+        # Extract regions
+        left_image = image[left_y_start:left_y_end, left_x_start:left_x_end]
+        right_image = image[right_y_start:right_y_end, right_x_start:right_x_end]
+
+        return left_image, right_image
+
+    def extract_green_mask(self, image):
+        if image is None:
+            return None
+
+        # Convert to RGB color space
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        # Convert to HSV color space
+        hsv_image = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2HSV)
+
+        # Define the HSV range for green
+        lower_green_hsv = np.array([35, 50, 50])
+        upper_green_hsv = np.array([85, 255, 255])
+
+        # Extract green mask
+        green_mask = cv2.inRange(hsv_image, lower_green_hsv, upper_green_hsv)
+
+        return green_mask
+    
     def _get_views(self, idx, resolution, rng, from_tar = False, ref_view_id = None):
         random_nv_nr = random.choice(self.random_nv_nr)
         # self.num_views = random_nv_nr[0]
@@ -122,7 +182,7 @@ class MVDataset(BaseStereoViewDataset):
         if self.ref_all:
             ref_view_id = idx % self.num_inference_views
             idx = idx // self.num_inference_views
-        
+
         with open(self.json_path, 'r') as f:
             data = json.load(f)
             data_dict = data[self.dps[idx]]
@@ -136,109 +196,136 @@ class MVDataset(BaseStereoViewDataset):
             #     if C[0][0] > 0.9:
             #         C_avg -= 1 / self.num_inference_views
             #     C_avg = np.array(C_avg).astype(np.float32)
+            ref_rgb = data_dict['ref_rgb_paths']
+            ref_indice = data_dict['ref_indice']
+            ref_covariants = data_dict['ref_covariants']
             
             pos_rgb_list = data_dict['pos_rgb_list']
             pos_indices = data_dict['pos_indices']
             pos_depth_file = data_dict['pos_depth_file']
             pos_pose_list = data_dict['pos_poses']
+            pos_covariants = data_dict['pos_covariants']
 
             neg_rgb_list = data_dict['neg_rgb_list']
             neg_indices = data_dict['neg_indices']
             neg_depth_file = data_dict['neg_depth_file']
             neg_pose_list = data_dict['neg_poses']
+            neg_covariants = data_dict['neg_covariants']
 
-            intrinsic_raw, intrinsic_list = None, []
-            if "intrinsic_raw" in data_dict.keys():
-                intrinsic_raw = data_dict['intrinsic_raw']
-            else:
-                intrinsic_list = data_dict['intrinsic_list']
+            # intrinsic_raw, intrinsic_list = None, []
+            # if "intrinsic_raw" in data_dict.keys():
+            #     intrinsic_raw = data_dict['intrinsic_raw']
+            # else:
+            #     intrinsic_list = data_dict['intrinsic_list']
         
         num_tuple = len(pos_rgb_list) + len(neg_rgb_list)
         
-        pos_render_set = [self.render_start + i for i in range(int(self.num_render_views/2))]
-        neg_render_set = [self.render_start + i for i in range(int(self.num_render_views/2))]
+        # pos_render_set = [self.render_start + i for i in range(int(self.num_render_views/2))]
+        # neg_render_set = [self.render_start + i for i in range(int(self.num_render_views/2))]
         
-        pos_inference_set = []
-        for i in range(int(self.num_views/2)):
-            if i not in pos_render_set:
-                pos_inference_set.append(i)
-            if len(pos_inference_set) == int(self.num_inference_views/2):
-                break
-        neg_inference_set = []
-        for i in range(int(self.num_views/2)):
-            if i not in neg_render_set:
-                neg_inference_set.append(i)
-            if len(neg_inference_set) == int(self.num_inference_views/2):
-                break
-
+        # pos_inference_set = []
+        # for i in range(int(self.num_views/2)):
+        #     if i not in pos_render_set:
+        #         pos_inference_set.append(i)
+        #     if len(pos_inference_set) == int(self.num_inference_views/2):
+        #         break
+        # neg_inference_set = []
+        # for i in range(int(self.num_views/2)):
+        #     if i not in neg_render_set:
+        #         neg_inference_set.append(i)
+        #     if len(neg_inference_set) == int(self.num_inference_views/2):
+        #         break
+        indice_n = int((self.random_nv_nr[0][0] - 1)/2)
+        pos_indices_set = random.choices(range(len(pos_indices)), k=indice_n)
+        neg_indices_set = random.choices(range(len(neg_indices)), k=indice_n)
         assert(len(neg_indices) != 0)
         pos_depth_list = np.load(pos_depth_file[1:])[np.array(pos_indices)] # change later 
         neg_depth_list = np.load(neg_depth_file[1:])[np.array(neg_indices)] # change later 
 
-        pos_rgb_list, pos_depth_list, pos_pose_list, intrinsic_raw = change_to_sr([pos_rgb_list, pos_depth_list, pos_pose_list, intrinsic_raw])
-        neg_rgb_list, neg_depth_list, neg_pose_list, _ = change_to_sr([neg_rgb_list, neg_depth_list, neg_pose_list, intrinsic_raw])
+        pos_rgb_list, pos_depth_list, pos_pose_list = change_to_sr([pos_rgb_list, pos_depth_list, pos_pose_list])
+        neg_rgb_list, neg_depth_list, neg_pose_list = change_to_sr([neg_rgb_list, neg_depth_list, neg_pose_list])
+        ref_view = []
         pos_views = []
         neg_views = []
-        for i in pos_inference_set + pos_render_set:
+        # ref_masks = np.zeros(resolution, dtype=np.uint8)
+        ######## Positive #########
+        for i in pos_indices_set:
             rgb = imageio.imread(g_pathmgr.get_local_path(pos_rgb_list[i])[1:]).astype(np.uint8) # / 256
-            depth = pos_depth_list[i]
-            intrinsic_ = np.array(intrinsic_raw).astype(np.float32)
-            intrinsic = np.eye(4).astype(np.float32)
-            intrinsic[:3,:3] = intrinsic_[:3,:3]
-
-            camera_pose = pos_pose_list[i]
-            rgb, depth = self._downsample_to_target(rgb, depth, resolution)
+            rgb = self._downsample_to_target(rgb, resolution)
+            src_mask = np.load(os.path.join("trajectories",pos_covariants[i]))
+            assert(src_mask.shape==(224,224))
+            # assert(left_region is not None and right_region is not None)
+            # ref_mask = self.extract_green_mask(left_region)
+            # src_mask = self.extract_green_mask(right_region)
+            # image_width, image_height = np.array(rgb).shape[:2]
+            # ref_mask = cv2.resize(ref_mask, (image_width, image_height), interpolation=cv2.INTER_NEAREST)
+            # src_mask = cv2.resize(src_mask, (image_width, image_height), interpolation=cv2.INTER_NEAREST)
+            # ref_masks = np.logical_or(ref_masks, ref_mask)
             label=f"{str(idx).zfill(9)}"
                 
             pos_views.append(dict(
                 random_nv_nr=np.array(random_nv_nr),
                 img=rgb,
-                depthmap=depth,
-                camera_pose=camera_pose,
-                camera_intrinsics=intrinsic,
+                mask=src_mask,
                 dataset=self.data_name,
                 label=label,
                 instance=str(idx),
-                only_render = i in pos_render_set,
                 num_render_views = random_nv_nr[1],
                 n_ref = self.n_ref,
                 pair_label = True,
                 # C_avg = C_avg,
             ))
-
-        for i in neg_inference_set + neg_render_set:
+        ######## Negative #########
+        for i in neg_indices_set:
             rgb = imageio.imread(g_pathmgr.get_local_path(neg_rgb_list[i])[1:]).astype(np.uint8) # / 256
-            depth = neg_depth_list[i]
-            intrinsic_ = np.array(intrinsic_raw).astype(np.float32)
-            intrinsic = np.eye(4).astype(np.float32)
-            intrinsic[:3,:3] = intrinsic_[:3,:3]
+            # intrinsic_ = np.array(intrinsic_raw).astype(np.float32)
+            # intrinsic = np.eye(4).astype(np.float32)
+            # intrinsic[:3,:3] = intrinsic_[:3,:3]
+            # camera_pose = neg_pose_list[i]
+            rgb = self._downsample_to_target(rgb, resolution)
+            src_mask = np.load(os.path.join("trajectories",neg_covariants[i]))
+            assert(src_mask.shape==(224,224))
+            # left_region, right_region = self.extract_regions_from_stitched_image(neg_covariants[i][1:])
 
-            camera_pose = neg_pose_list[i]
-            rgb, depth = self._downsample_to_target(rgb, depth, resolution)
+            # assert(left_region is not None and right_region is not None)
+            # ref_mask = self.extract_green_mask(left_region)
+            # src_mask = self.extract_green_mask(right_region)
+            # image_width, image_height = np.array(rgb).shape[:2]
+            # ref_mask = cv2.resize(ref_mask, (image_width, image_height), interpolation=cv2.INTER_NEAREST)
+            # src_mask = cv2.resize(src_mask, (image_width, image_height), interpolation=cv2.INTER_NEAREST)
+            # ref_masks = np.logical_or(ref_masks, ref_mask)
 
             label=f"{str(idx).zfill(9)}"
                 
             neg_views.append(dict(
                 random_nv_nr=np.array(random_nv_nr),
                 img=rgb,
-                depthmap=depth,
-                camera_pose=camera_pose,
-                camera_intrinsics=intrinsic,
+                mask=src_mask,
                 dataset=self.data_name,
                 label=label,
                 instance=str(idx),
-                only_render = i in neg_render_set,
                 num_render_views = random_nv_nr[1],
                 n_ref = self.n_ref,
                 pair_label = False,
-                # C_avg = C_avg,
             ))
-        
-        if ref_view_id != 0:
-            pos_views[0], pos_views[ref_view_id] = deepcopy(pos_views[ref_view_id]), deepcopy(pos_views[0])
 
-        ref_view = [pos_views[0]]
-        pos_views = pos_views[1:]  # Extract last 9 elements
+        ######## Reference ########
+        rgb = imageio.imread(g_pathmgr.get_local_path(ref_rgb)[1:]).astype(np.uint8) # / 256
+        rgb = self._downsample_to_target(rgb, resolution)
+        label=f"{str(idx).zfill(9)}"
+        ref_mask = np.load(os.path.join("trajectories",ref_covariants[0]))
+        assert(ref_mask.shape==(224,224))
+        ref_view.append(dict(
+            random_nv_nr=np.array(random_nv_nr),
+            img=rgb,
+            mask=ref_mask,
+            dataset=self.data_name,
+            label=label,
+            instance=str(idx),
+            num_render_views = random_nv_nr[1],
+            n_ref = self.n_ref,
+            pair_label = True,
+        ))
         # if self.random_order:
         #     random.shuffle(pos_views)  # Shuffle them
         # else:
@@ -260,23 +347,23 @@ class MVDataset(BaseStereoViewDataset):
         # change_id = (self.num_inference_views * 3) // 4 + 1
         # views[3], views[change_id] = deepcopy(views[change_id]), deepcopy(views[3])
 
-        pos_views_inference, pos_views_render = [], []
-        for pos_view in pos_views:
-            if pos_view['only_render']:
-                pos_views_render.append(pos_view)
-            else:
-                pos_views_inference.append(pos_view)
-        pos_views = pos_views_inference + pos_views_render
-        assert len(pos_views) == int(self.num_views/2) - 1
+        # pos_views_inference, pos_views_render = [], []
+        # for pos_view in pos_views:
+        #     if pos_view['only_render']:
+        #         pos_views_render.append(pos_view)
+        #     else:
+        #         pos_views_inference.append(pos_view)
+        # pos_views = pos_views_inference + pos_views_render
+        # assert len(pos_views) == int(self.num_views/2) - 1
 
-        neg_views_inference, neg_views_render = [], []
-        for neg_view in neg_views:
-            if neg_view['only_render']:
-                neg_views_render.append(neg_view)
-            else:
-                neg_views_inference.append(neg_view)
-        neg_views = neg_views_inference + neg_views_render
-        assert len(neg_views) == int(self.num_views/2)
+        # neg_views_inference, neg_views_render = [], []
+        # for neg_view in neg_views:
+        #     if neg_view['only_render']:
+        #         neg_views_render.append(neg_view)
+        #     else:
+        #         neg_views_inference.append(neg_view)
+        # neg_views = neg_views_inference + neg_views_render
+        # assert len(neg_views) == int(self.num_views/2)
 
         if self.random_order:
             pos_neg_views = pos_views + neg_views

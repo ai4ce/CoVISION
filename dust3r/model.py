@@ -113,8 +113,8 @@ class AsymmetricCroCo3DStereo (
         self.depth_mode = depth_mode
         self.conf_mode = conf_mode
         # allocate heads
-        self.downstream_head1 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode))
-        self.downstream_head2 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode))
+        self.downstream_head1 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), head_no=1)
+        self.downstream_head2 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), head_no=2)
         # magic wrapper
         self.head1 = transpose_to_landscape(self.downstream_head1, activate=landscape_only)
         self.head2 = transpose_to_landscape(self.downstream_head2, activate=landscape_only)
@@ -183,11 +183,11 @@ class AsymmetricCroCo3DStereo (
         final_output[-1] = tuple(map(self.dec_norm, final_output[-1]))
         return zip(*final_output)
 
-    def _downstream_head(self, head_num, decout, img_shape):
+    def _downstream_head(self, head_num, decout, img_shape, head_no):
         B, S, D = decout[-1].shape
         # img_shape = tuple(map(int, img_shape))
         head = getattr(self, f'head{head_num}')
-        return head(decout, img_shape)
+        return head(decout, img_shape, head_no)
 
     def forward(self, view1, view2):
         # encode the two images --> B,S,D
@@ -195,7 +195,6 @@ class AsymmetricCroCo3DStereo (
 
         # combine all ref images into object-centric representation
         dec1, dec2 = self._decoder(feat1, pos1, feat2, pos2)
-
         with torch.cuda.amp.autocast(enabled=False):
             res1 = self._downstream_head(1, [tok.float() for tok in dec1], shape1)
             res2 = self._downstream_head(2, [tok.float() for tok in dec2], shape2)
@@ -294,8 +293,8 @@ class AsymmetricCroCo3DStereoMultiView (
         self.depth_mode = depth_mode
         self.conf_mode = conf_mode
         # allocate heads
-        self.downstream_head1 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), pts_head_config = self.pts_head_config)
-        self.downstream_head2 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), pts_head_config = self.pts_head_config)
+        self.downstream_head1 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), head_no=1, pts_head_config = self.pts_head_config)
+        self.downstream_head2 = head_factory(head_type, output_mode, self, has_conf=bool(conf_mode), head_no=2, pts_head_config = self.pts_head_config)
         # magic wrapper
         self.head1 = transpose_to_landscape(self.downstream_head1, activate=landscape_only)
         self.head2 = transpose_to_landscape(self.downstream_head2, activate=landscape_only)
@@ -446,11 +445,11 @@ class AsymmetricCroCo3DStereoMultiView (
         
         return f1_all, f2_alls
 
-    def _downstream_head(self, head_num, decout, img_shape):
+    def _downstream_head(self, head_num, decout, img_shape, head_no):
         # B, S, D = decout[-1].shape
         # img_shape = tuple(map(int, img_shape))
         head = getattr(self, f'head{head_num}')
-        return head(decout, img_shape)
+        return head(decout, img_shape, head_no)
     
     def _downstream_head_GS(self, head_num, decout, img_shape):
         # B, S, D = decout[-1].shape
@@ -476,6 +475,7 @@ class AsymmetricCroCo3DStereoMultiView (
         (shape1, shape2s), (feat1, feat2s), (pos1, pos2s) = self._encode_symmetrized(view1, view2s) # every view is dealt with the same param.
         # combine all ref images into object-centric representation
         dec1, dec2s = self._decoder(feat1, pos1, feat2s, pos2s, n_ref = n_ref) #1xtorch.Size([64, 196, 768]) , 7xtorch.Size([64, 196, 768])
+
         with torch.cuda.amp.autocast(enabled=False):
             # print('1 shape', [tok.shape for tok in dec1]) # 1 shape [torch.Size([4, 14 * 14, 1024]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768])]
             # print('2 shape', [[tok.shape for tok in dec2] for (dec2, shape2) in zip(dec2s, shape2s)]) # 2 shape [[torch.Size([4, 196, 1024]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768])], [torch.Size([4, 196, 1024]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768])], [torch.Size([4, 196, 1024]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768]), torch.Size([4, 196, 768])]]
@@ -491,8 +491,14 @@ class AsymmetricCroCo3DStereoMultiView (
             view1_img = views_img[0]
             view2s_img = views_img[1:]
 
-            res1 = self._downstream_head(1, ([tok.float() for tok in dec1], view1_img), shape1)
-            res2s = [self._downstream_head(2, ([tok.float() for tok in dec2], view2_img), shape2) for (dec2, shape2, view2_img) in zip(dec2s, shape2s, view2s_img)]
+            # mask1 = view1['mask']
+            # mask2s = view2s_all['mask']
+            res1, _ = self._downstream_head(1, ([tok.float() for tok in dec1], view1_img), shape1, 1)
+            res2s, p_mask2s = [], []
+            for (dec2, shape2, view2_img) in zip(dec2s, shape2s, view2s_img):
+                res2, p_mask2 = self._downstream_head(2, ([tok.float() for tok in dec2], view2_img), shape2, 2)
+                res2s.append(res2)
+                p_mask2s.append(p_mask2)
             # if self.GS:
             #     res1_GS = self._downstream_head_GS(1, ([tok.float() for tok in dec1], view1_img), shape1)
             #     res2s_GS = [self._downstream_head_GS(2, ([tok.float() for tok in dec2], view2_img), shape2) for (dec2, shape2, view2_img) in zip(dec2s, shape2s, view2s_img)]
@@ -505,4 +511,4 @@ class AsymmetricCroCo3DStereoMultiView (
 
             # for res2 in res2s:
             #     res2['pts3d_in_other_view'] = res2.pop('pts3d')  # predict view2's pts3d in view1's frame
-        return res1, res2s # torch.Size([B, 2048]), 7x torch.Size([B, 2048])
+        return res1, res2s, p_mask2s # torch.Size([B, 2048]), 7x torch.Size([B, 2048])

@@ -484,7 +484,6 @@ class L21Loss (LLoss):
     def distance(self, a, b):
         return torch.norm(a - b, dim=-1)  # normalized L2 distance
 
-
 L21 = L21Loss()
 
 
@@ -1598,6 +1597,54 @@ class BCELoss(MultiLoss):
         # Compute BCE loss for pred
         loss = self.loss_fn(pred, pair_labels)
 
+        # Return loss and details
+        details = {
+            f'{self.get_name()}_pred': float(loss.detach().cpu().item()),
+        }
+        return loss, details
+
+class MaskBCELoss(MultiLoss):
+    def __init__(self):
+        super().__init__()
+        self.loss_fn = nn.BCEWithLogitsLoss()
+
+    def get_name(self):
+        return 'MaskBCELoss'
+
+    def compute_loss(self, gt1, gt2s, pred1, pred2s, mask2s):
+        """
+        Compute BCE loss for pred1 and pred2s separately.
+
+        Args:
+            gt1: Ground truth for query, contains `pair_label1`
+            gt2s: Ground truth for positives and negatives, contains `pair_label2`
+            pred1: Query embeddings, shape (batch_size, feature_dim)
+            pred2s: List of embeddings for positives and negatives, shape (batch_size, N, feature_dim)
+
+        Returns:
+            loss (Tensor): Combined BCE loss
+            details (dict): Loss details
+        """
+        # Get pair_labels1 for pred1
+        pair_labels1 = gt1["pair_label"].float().to(pred1.device)  # (batch_size,)
+        # gt_mask1 = gt1['mask'].unsqueeze(1)
+        gt_mask2s = []
+        for gt2 in gt2s:
+            gt_mask2s.append(gt2['mask'].unsqueeze(1))
+
+        gt_masks = torch.cat(gt_mask2s, dim=0).to(mask2s[0].device).float()
+        pred_masks = torch.cat(mask2s, dim=0)
+        mask_loss = F.binary_cross_entropy(pred_masks, gt_masks)
+        
+        # Get pair_labels2 for pred2s
+        pair_labels2 = torch.cat([gt["pair_label"].unsqueeze(1) for gt in gt2s], dim=1).float().to(pred1.device)  # (batch_size, N)
+        pred2s = torch.cat([p.unsqueeze(1) for p in pred2s], dim=1)  # (batch_size, N, feature_dim)
+        pred = torch.cat([pred1, pred2s.squeeze(-1)],dim=1)
+        pair_labels = torch.cat([pair_labels1.unsqueeze(1),pair_labels2],dim=1)
+
+        # Compute BCE loss for pred
+        loss = self.loss_fn(pred, pair_labels)
+        loss += 0.3*mask_loss
         # Return loss and details
         details = {
             f'{self.get_name()}_pred': float(loss.detach().cpu().item()),

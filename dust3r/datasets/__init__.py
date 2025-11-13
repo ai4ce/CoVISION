@@ -3,6 +3,7 @@
 from .utils.transforms import *
 from .base.batched_sampler import BatchedRandomSampler  # noqa: F401
 from .mvdataset import *  # noqa: F401
+from .hm3ddataset import *  # noqa: F401
 
 
 def get_data_loader(dataset, batch_size, num_workers=8, shuffle=True, drop_last=True, pin_mem=True):

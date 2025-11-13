@@ -145,8 +145,8 @@ def main(args):
     print('Building test dataset {:s}'.format(args.test_dataset))
     data_loader_test = {}
     for dataset_name in args.test_dataset.split('+'):
-        dataset = build_dataset(dataset_name, args.batch_size*8, args.num_workers, test=True)
-        dataset_name = dataset.dataset.tb_name
+        dataset = build_dataset(dataset_name, args.batch_size, args.num_workers, test=True)
+        dataset_name = 'mp3d_tdf_2_testFull_9_2' #dataset.dataset.tb_name
         data_loader_test[dataset_name] = dataset
 
     # model
@@ -239,7 +239,7 @@ def main(args):
         # Test on multiple datasets
         new_best = False
         # if False:
-        if ((epoch == 0 and args.allow_first_test > 0) or (epoch != 0 and args.eval_freq > 0 and epoch % args.eval_freq == 0)) or epoch == 1:
+        if ((epoch == 0 and args.allow_first_test > 0) or (epoch != 0 and args.eval_freq > 0 and epoch % args.eval_freq == 4)):
             test_stats = {}
             test_set_id = -1
             for test_name, testset in data_loader_test.items():
@@ -343,12 +343,12 @@ def postprocess_batch(batch): # here the randomized number of inference views / 
     while len(batch) > nv:
         del batch[-1]
     batch = batch[:nv]
-    ni = nv - nr
-    for i in range(ni):
-        batch[i]['only_render'][:] = False
-    for i in range(ni, nv):
-        batch[i]['only_render'][:] = True
-    return batch, ni
+    # ni = nv - nr
+    # for i in range(ni):
+    #     batch[i]['only_render'][:] = False
+    # for i in range(ni, nv):
+    #     batch[i]['only_render'][:] = True
+    return batch, nv
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Sized, optimizer: torch.optim.Optimizer,

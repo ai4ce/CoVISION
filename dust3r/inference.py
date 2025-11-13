@@ -10,6 +10,7 @@ import torch
 from dust3r.utils.device import to_cpu, collate_with_cat
 from dust3r.utils.misc import invalid_to_nans
 from dust3r.utils.geometry import depthmap_to_pts3d, geotrf
+import numpy as np
 
 
 def _interleave_imgs(img1, img2):
@@ -32,6 +33,45 @@ def make_batch_symmetric(batch):
 def loss_of_one_batch_mv(batch, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None, log = True):
     views = batch
     view1, view2s = views[0], views[1:]
+    if len(view2s)> 15:
+        view2s = view2s[:15]
+    for view in batch:
+        model_device = model.to(device, non_blocking=True)
+        for name in 'img pts3d valid_mask camera_pose camera_intrinsics F_matrix corres'.split():  # pseudo_focal
+            if name not in view:
+                continue
+            view[name] = view[name].to(device, non_blocking=True)
+    
+    with torch.cuda.amp.autocast(enabled=bool(use_amp)):
+        t = time.time()
+        pred1, pred2s, p_mask2s = model_device(view1, view2s)
+        nv = len(pred2s) + 1
+        # if log:
+            # sync = pred1['pts3d'].mean().item()
+            # print('synced', sync)
+            # print('pure inference time (only predictions of pcd and 3DGS parameters, not including cam pose estimations)', time.time() - t, 'nv', nv)
+        # loss is supposed to be symmetric
+        with torch.cuda.amp.autocast(enabled=False):
+            if criterion is not None:
+                loss = criterion(view1, view2s, pred1, pred2s, p_mask2s)
+
+    if criterion is not None:
+        result = dict(view1=view1, view2s=view2s, pred1=pred1, pred2s=pred2s, p_mask2s=p_mask2s, loss=loss)
+    else:
+        result = dict(view1=view1, view2s=view2s, pred1=pred1, pred2s=pred2s, p_mask2s=p_mask2s)
+    return result[ret] if ret else result
+
+def loss_of_one_batch(batch, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None, log = True):
+    # import pdb; pdb.set_trace()
+    # if criterion is not None and criterion.mv:
+    return loss_of_one_batch_mv(batch, model, criterion, device, False, use_amp, ret, log)
+
+def loss_of_one_batch_mv_mask(batch, aligned_mask1, aligned_mask2, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None, log = True):
+    views = batch
+    view1, view2s = views[0], views[1:]
+    batch[0]['mask'] = torch.tensor(np.array(aligned_mask1))
+    for i, view2 in enumerate(batch[1:]):
+        view2['mask'] = torch.tensor(np.array(aligned_mask2[i]))
     for view in batch:
         model_device = model.to(device, non_blocking=True)
         for name in 'img pts3d valid_mask camera_pose camera_intrinsics F_matrix corres'.split():  # pseudo_focal
@@ -58,10 +98,10 @@ def loss_of_one_batch_mv(batch, model, criterion, device, symmetrize_batch=False
         result = dict(view1=view1, view2s=view2s, pred1=pred1, pred2s=pred2s)
     return result[ret] if ret else result
 
-def loss_of_one_batch(batch, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None, log = True):
+def loss_of_one_batch_mask(batch, aligned_mask1, aligned_mask2, model, criterion, device, symmetrize_batch=False, use_amp=False, ret=None, log = True):
     # import pdb; pdb.set_trace()
     # if criterion is not None and criterion.mv:
-    return loss_of_one_batch_mv(batch, model, criterion, device, False, use_amp, ret, log)
+    return loss_of_one_batch_mv_mask(batch, aligned_mask1, aligned_mask2, model, criterion, device, False, use_amp, ret, log)
     # view1, view2 = batch
     # for view in batch:
     #     for name in 'img pts3d valid_mask camera_pose camera_intrinsics F_matrix corres'.split():  # pseudo_focal

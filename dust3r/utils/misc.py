@@ -63,7 +63,7 @@ def transpose_to_landscape(head, activate=True):
         res = head(decout, (H, W))
         return res
 
-    def wrapper_yes(decout, true_shape):
+    def wrapper_yes(decout, true_shape, head_no):
         B = len(true_shape)
         # by definition, the batch is in landscape mode so W >= H
         H, W = int(true_shape.min()), int(true_shape.max())
@@ -74,14 +74,14 @@ def transpose_to_landscape(head, activate=True):
 
         # true_shape = true_shape.cpu()
         if is_landscape.all():
-            return head(decout, (H, W))
+            return head(decout, (H, W), head_no)
         if is_portrait.all():
-            return transposed(head(decout, (W, H)))
+            return transposed(head(decout, (W, H)),head_no)
 
         # batch is a mix of both portraint & landscape
         def selout(ar): return [d[ar] for d in decout]
-        l_result = head(selout(is_landscape), (H, W))
-        p_result = transposed(head(selout(is_portrait),  (W, H)))
+        l_result = head(selout(is_landscape), (H, W), head_no)
+        p_result = transposed(head(selout(is_portrait),  (W, H), head_no))
 
         # allocate full result
         result = {}

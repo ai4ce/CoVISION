@@ -41,7 +41,7 @@ class LinearFeat(nn.Module):
     Each token outputs: - 16x16 3D points (+ confidence)
     """
 
-    def __init__(self, net, has_conf=False, skip = False):
+    def __init__(self, net, has_conf=False, head_no=False, skip = False):
         super().__init__()
         self.patch_size = net.patch_embed.patch_size[0]
         self.depth_mode = net.depth_mode
@@ -70,6 +70,10 @@ class LinearFeat(nn.Module):
         # pooling
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
         self.pool2 = nn.AdaptiveAvgPool1d(1)
+        
+        self.head_no = head_no
+        if head_no != 1:
+            self.mask_conv = nn.Conv2d(4, 1, kernel_size=1)  # downsample D=4 to D=1
 
         if self.skip:
             skip_dim = 256
@@ -99,7 +103,8 @@ class LinearFeat(nn.Module):
     def setup(self, croconet):
         pass
 
-    def forward(self, decout, img_shape): 
+    def forward(self, decout, img_shape, head_no): 
+        assert(self.head_no==head_no)
         # decout[0][0]:torch.Size([64, 196, 768]) Token B,S,D
         # decout[1]:torch.Size([64, 3, 224, 224]) view_img
         H, W = img_shape
@@ -120,7 +125,20 @@ class LinearFeat(nn.Module):
             feat[:, :3] = feat[:, :3] + img_skip
 
         # D increase, H and W shrink
-        feat = F.relu(self.bn1(self.conv1(feat)))  # B, 64, H, W
+        if head_no != 1:
+            mask = F.sigmoid(self.mask_conv(feat))
+            if len(mask.shape) == 3:
+                mask = mask.unsqueeze(1)
+        else:
+            try:
+                B,_,H,W = feat.shape
+                mask = torch.ones(B,1,H,W).to(feat.device)
+            except:
+                import pdb; pdb.set_trace()
+        
+        masked_feat = feat * mask.to(feat.device)
+
+        feat = F.relu(self.bn1(self.conv1(masked_feat)))  # B, 64, H, W
         feat = F.relu(self.bn2(self.conv2(feat)))  # B, 128, H/2, W/2
         feat = F.relu(self.bn3(self.conv3(feat)))  # B, 256, H/4, W/4
         feat = F.relu(self.bn4(self.conv4(feat)))  # B, 512, H/8, W/8
@@ -131,7 +149,7 @@ class LinearFeat(nn.Module):
         feat = self.pool(feat)  # B, 2048, 1, 1
         feat = feat.view(B, -1)  # B, 2048
         feat = self.pool2(feat.unsqueeze(1)).squeeze(1)
-        return feat
+        return feat, mask
 
 
 

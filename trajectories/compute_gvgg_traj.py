@@ -84,10 +84,14 @@ def compute_list(cam_dir, rel_mat, pose_file, threshold = 0.01, max_len = 30):
         rgb_paths.append(osp.join(cam_dir,"best_color_"+str(i)+'.png'))
     for i in range(rel_matrix.shape[0]):
         pos_indices = np.where(rel_matrix[i] > threshold)[0].tolist()
+        pos_indices.remove(i)
         neg_indices = np.where(rel_matrix[i] <= threshold)[0].tolist()
         assert(len(pos_indices) < max_len)
         assert(len(neg_indices) < 2*max_len)
-        pos_indices += random.choices(pos_indices, k=max_len - len(pos_indices))
+        if len(pos_indices) == 0:
+            pass
+        else:
+            pos_indices += random.choices(pos_indices, k=max_len - len(pos_indices))
         if len(neg_indices) == 0:
             pass
         else:
@@ -109,10 +113,10 @@ def compute_list(cam_dir, rel_mat, pose_file, threshold = 0.01, max_len = 30):
 
     return pos_indices_all, pos_rgb_paths_all, pos_depth_file_all, pos_pose_all, neg_indices_all, neg_rgb_paths_all, neg_depth_file_all, neg_pose_all
 
-def create_dataset(dataset_size, scene_name, mode, data_root, intrinsic_matrix):
+def create_dataset(dataset_size, scene_name, mode, data_root, Train_Test_list):
     dataset = []
     for i in range(dataset_size):
-        scene = osp.join(data_root, Train_list[i])
+        scene = osp.join(data_root, Train_Test_list[i])
         contents = os.listdir(scene)
         floor_folders = [name for name in contents if name.isdigit() and os.path.isdir(os.path.join(scene, name))]
         for floor in floor_folders:
@@ -128,7 +132,7 @@ def create_dataset(dataset_size, scene_name, mode, data_root, intrinsic_matrix):
             #         depth_file = "best_depth_"+filename
             #         compute_list(root, floor, f[:-4], depth_file, rel_mat, pose, out_dir)
             for t, indice in enumerate(pos_indices):
-                if len(neg_indices[t])==0:
+                if len(neg_indices[t])==0 or len(pos_indices[t])==0:
                     continue
                 data_per = {
                     'scene_name': scene_name,
@@ -165,10 +169,12 @@ intrinsic_matrix = np.array([
         [0., 0., 1, 0],
         [0., 0., 0, 1]])
 
-dataset_train = create_dataset(train_len, scene_name, "train", data_root, intrinsic_matrix)
+dataset_train = create_dataset(train_len, scene_name, "train", data_root, Train_list)
+print("len(dataset_train)::::", len(dataset_train))
 save_dataset(dataset_train, "covision_train/dataset_train.json")
 
-dataset_test = create_dataset(test_len, scene_name, "test", data_root, intrinsic_matrix)
+dataset_test = create_dataset(test_len, scene_name, "test", data_root, Test_list)
+print("len(dataset_test)::::", len(dataset_test))
 save_dataset(dataset_test, "covision_test/dataset_test.json")
 
 

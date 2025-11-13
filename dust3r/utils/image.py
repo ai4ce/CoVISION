@@ -103,7 +103,10 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, n_frame = 1
         for path in folder_content:
             if type(path) != str:
                 path = path.name
-            img = exif_transpose(PIL.Image.open(os.path.join(root, path))).convert('RGB')
+            try:
+                img = exif_transpose(PIL.Image.open(os.path.join(root, path))).convert('RGB')
+            except:
+                import pdb; pdb.set_trace()
             imgs_raw.append(img)
     for img in imgs_raw:
         # if not path.lower().endswith(supported_images_extensions):
